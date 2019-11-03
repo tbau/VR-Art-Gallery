@@ -29,11 +29,13 @@
 		}
 		var index = 0;
 		var images=[]
-		for(var i=1;i<8;i++)
+		for(var i=1;i<14;i++)
 		images.push("static/images/art/image"+i+".jpg")
 
 		var texts=["Starry Night","Mona Lisa","Ancient Persian","Great Wave of Kanagawa","Ragamala",
-		"The Persistence of Memory","The Scream"]
+		"The Persistence of Memory","The Scream","The Creation of Adam","Dragon","Dragon","Dragon","Dragon",
+		"Sci-Fi Concept Art"]
+
 		var start = new Date()
 		var xisDown = false;
 		setInterval(function (ip) {
@@ -129,6 +131,22 @@
 				window.dispatchEvent(new KeyboardEvent('keydown', { 'code': 'KeyW' }))
 				//document.querySelector("#camera").object3D.position.set(1, 0, 1);
 			}
+			if(e.keyCode==69){
+				index++;
+						if (index > images.length - 1) {
+							index = 0;
+						}
+						imageTag.setAttribute('src', images[index])
+						imageDesc.setAttribute('value', texts[index])
+			}
+			if(e.keyCode==81){
+				index--;
+						if (index < 0) {
+							index = images.length - 1;
+						}
+						imageTag.setAttribute('src', images[index])
+						imageDesc.setAttribute('value', texts[index])
+			}
 		})
 
 		window.addEventListener("keyup", function (e) {
@@ -177,7 +195,7 @@
 		</a-plane>
 
 
-		<a-image width="4" id="imageTag" height="4" src="" position="0 1.6 -4" rotation="0 0 0"></a-image>
+		<a-image width="4" id="imageTag" height="4" src="" position="0 0 -4" rotation="0 0 0"></a-image>
 
 		<!--
 				
@@ -188,7 +206,7 @@
 		<a-cylinder ng-repeat="f in floor track by $index" checkpoint="offset:0 0 0" radius="1" height="0.1"
 			position="0 -2 //-10*$index//" color="#FFFFFF" id="spot//$index//">
 		</a-cylinder>
-	    --><a-text id="imageDesc" font="kelsonsans" width="4" scale="" rotation="0 0 0" value="Starry Night" position="-.4 0 -3.5"></a-text>
+	    --><a-text id="imageDesc" font="kelsonsans" width="4" scale="" rotation="0 0 0" value="Starry Night" position="-.4 1.6 -3.5"></a-text>
 
 		<!--<a-box static-body width="3" height="3" position="0 0 -4" material="color:red; opacity:0.2"></a-box>-->
 
