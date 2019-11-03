@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!--Milky Way Image - ESO/S. Brunier-->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta name="description" content="">
+	<title>Art Gallery</title>
+	<script>
+		//alert(navigator.userAgent)
+		//navigator.vibrate(200)
+	</script>
+	<script type="text/javascript" src="static/js/aframe.js"></script>
+	<script type="text/javascript" src="static/js/aframe-extras.js"></script>
+	<script type="text/javascript" src="static/js/aframe-physics-system.js"></script>
+	<script type="text/javascript" src="static/js/angular.min.js"></script>
+</head>
+
+<body>
+
+	<script>
+		var ip = "10.67.182.177";
+		keys = {
+			"L1": 308, "R1": 309, "L2": 310, "R2": 311,
+			"SQUARE": 304, "X": 305, "O": 306, "TRIANGLE": 307,
+			"SHARE": 312, "OPTIONS": 313, "L3": 314, "R3": 315,
+			"PS": 316, "TOUCH": 317
+		}
+		var index = 0;
+		var images=[]
+		for(var i=1;i<8;i++)
+		images.push("static/images/art/image"+i+".jpg")
+
+		var texts=["Starry Night","Mona Lisa","Ancient Persian","Great Wave of Kanagawa","Ragamala",
+		"The Persistence of Memory","The Scream"]
+		var start = new Date()
+		var xisDown = false;
+		setInterval(function (ip) {
+
+			var now = new Date()
+			if (now - start > 1000) {
+				start = new Date();
+				fetch("http://" + ip + ":80/getData").then(data => data.json()).then(result => {
+					if (result["data"] != null)
+						result = JSON.parse(result["data"])
+
+					if (result[keys["O"]]) {
+						index++;
+						if (index > images.length - 1) {
+							index = 0;
+						}
+						imageTag.setAttribute('src', images[index])
+						imageDesc.setAttribute('value', texts[index])
+
+					}
+					if (result[keys["SQUARE"]]) {
+						index--;
+						if (index < 0) {
+							index = images.length - 1;
+						}
+						imageTag.setAttribute('src', images[index])
+						imageDesc.setAttribute('value', texts[index])
+
+					}
+					if (result[keys["X"]]) {
+						xisDown = true
+						window.dispatchEvent(new KeyboardEvent('keydown', { 'code': 'KeyW' }))
+						setTimeout(function(){
+							
+						window.dispatchEvent(new KeyboardEvent('keyup', { 'code': 'KeyW' }))
+						},100)
+					}
+				
+				}
+				)
+
+			}
+		}, 10, ip, start, xisDown, move, index);
+		/*
+		AFRAME.registerComponent('box', {
+		schema: {
+			width: { type: 'number', default: 8 },
+			height: { type: 'number', default: 4 },
+			depth: { type: 'number', default: 0 },
+			color: { type: 'color', default: '#AAA' }
+		},
+	
+		init: function () {
+			var data = this.data;
+			var el = this.el;
+	
+			this.loader = new THREE.TextureLoader();
+	
+			this.geometry = new THREE.BoxBufferGeometry(data.width, data.height, data.depth);
+			this.material = new THREE.MeshPhongMaterial({
+				map: this.getImage()
+			});
+			this.material.needsUpdate = true;
+			this.mesh = new THREE.Mesh(this.geometry, this.material);
+			el.setObject3D('mesh', this.mesh);
+		},
+	
+		tick: function (time, timeDelta) {
+			this.mesh.material.map.img = this.getImage();
+			this.mesh.material.map.needsUpdate = true;
+		},
+	
+		getImage: function() {
+			return this.loader.load("http://192.168.2.11:8000/stream.mjpg");
+		}
+	});
+	*/
+		var fusing = false;
+		var thetaLength = 360;
+		var oldtime = 0;
+		var fusingElements = []
+		var fusingElement = null;
+		var floor = null;
+		var movingElement = []
+		var move = false;
+		var startedLooking = false;
+
+
+		window.addEventListener("keydown", function (e) {
+			//alert(e.code)  
+			if (e.keyCode == 32) {
+				move = true;
+				window.dispatchEvent(new KeyboardEvent('keydown', { 'code': 'KeyW' }))
+				//document.querySelector("#camera").object3D.position.set(1, 0, 1);
+			}
+		})
+
+		window.addEventListener("keyup", function (e) {
+			//alert(e.code)  
+			if (e.keyCode == 32) {
+				move = false;
+				window.dispatchEvent(new KeyboardEvent('keyup', { 'code': 'KeyW' }))
+
+				//document.querySelector("#camera").object3D.position.set(1, 0, 1);
+			}
+		})
+	</script>
+	<!--   event-set__down="_event: fusing; material.wireframe: true"
+     event-set__leave="_event: mouseleave; material.wireframe: false"    
+	<a-sky material="color:black"></a-sky>-->
+
+	<a-scene ng-app="myApp" ng-controller="myCtrl" id="scene" physics="debug:false;gravity:-50">
+		<a-assets>
+			<img id="image" src="">
+		</a-assets>
+		<a-sky color="black"></a-sky>
+
+		<!--Top Main Floor-->
+		<a-image src="static/images/floor1.jpg" static-body position='-1.5 -1.98 0' rotation="-90 0 0" width="3"
+			height="8" class="floor"></a-image>
+		<a-image src="static/images/floor1.jpg" static-body position='1.5 -1.98 0' rotation="-90 0 0" width="3"
+			height="8" class="floor"></a-image>
+
+		<!--Cieling-->
+		<a-plane static-body position="0 3.95 0" rotation="90 0 0" width="6" height="8" color="gray" opacity="1"
+			id="cieling"></a-plane>
+		<!--Left Side-->
+		<a-plane static-body position="-3.01 1 0" rotation="0 90 0" width="8" height="6" color="gray" opacity="1"
+			id="side1"></a-plane>
+		<!--Right Side-->
+		<a-plane static-body position="3.01 1 0" rotation="0 -90 0" width="8" height="6" color="gray" opacity="1"
+			id="side2"></a-plane>
+
+		<!--Back Wall-->
+		<a-plane static-body position="0 1 4" rotation="0 180 0" width="8" height="8" color="gray" opacity="1">
+		</a-plane>
+
+
+		<!--Front Wall-->
+		<a-plane static-body position="0 0 -4.01" rotation="0 0 0" width="8" height="8" color="gray" opacity="1">
+		</a-plane>
+
+
+		<a-image width="4" id="imageTag" height="4" src="" position="0 1.6 -4" rotation="0 0 0"></a-image>
+
+		<!--
+				
+		<a-image ng-repeat="f in floor track by $index" width="8" height="4" src="//images[$index]//"
+			position="3 0  //$index*-10//" rotation="0 90 0"></a-image>
+
+
+		<a-cylinder ng-repeat="f in floor track by $index" checkpoint="offset:0 0 0" radius="1" height="0.1"
+			position="0 -2 //-10*$index//" color="#FFFFFF" id="spot//$index//">
+		</a-cylinder>
+	    --><a-text id="imageDesc" font="kelsonsans" width="4" scale="" rotation="0 0 0" value="Starry Night" position="-.4 0 -3.5"></a-text>
+
+		<!--<a-box static-body width="3" height="3" position="0 0 -4" material="color:red; opacity:0.2"></a-box>-->
+
+		<!-- ambient light -->
+		<a-entity light="type: ambient; color: #BBB"></a-entity>
+
+		<!-- custom point light -->
+		<a-entity light="type: point; intensity: 0.5; distance: 10; castShadow: true" position="0 2 0">
+		</a-entity>
+
+		<a-entity id="rig" look-controls kinematic-body movement-controls position="0 0 0"
+			checkpoint-controls="mode: teleport">
+			<a-entity id="camera" camera position="0 3.6 0">
+				<a-entity cursor="fuse: true; fuseTimeout: 2000;" id="cursor-main" position="0 0 -2"
+					geometry="primitive: ring; radiusOuter: 0.06; radiusInner: 0.03; thetaLength: 360; thetaStart: 90;"
+					material="color: #439DC2;" cursor-listener>
+				</a-entity>
+				<a-entity id="cursor-loader" position="0 0 -2.01"
+					geometry="primitive: ring; radiusOuter: 0.06; radiusInner: 0.03;" material="color: #2ADD2A;">
+				</a-entity>
+			</a-entity>
+	</a-scene>
+
+</body>
+<script>
+
+	var imageTag = document.getElementById("imageTag");
+
+	var imageDesc = document.getElementById("imageDesc");
+	var app = angular.module("myApp", []);
+
+	app.controller("myCtrl", function ($scope) {
+
+		AFRAME.registerComponent('cursor-listener', {
+
+			init: function () {
+
+				fusingElements = [];
+
+				fusing = false;
+				thetaLength = 360;
+				this.el.addEventListener('fusing', function (evt) {
+					//console.log(evt.detail.intersectedEl)
+					fusingElement = evt.detail.intersectedEl;
+					for (var i = 0; i < fusingElements.length; i++) {
+						if (fusingElements[i] == evt.detail.intersectedEl) {
+							fusing = true;
+							var d = new Date();
+							oldtime = d.getTime();
+						}
+					}
+
+				});
+				this.el.addEventListener('mouseleave', function (evt) {
+					fusing = false;
+					startedLooking = false;
+				});
+
+			},
+			tick: function (time) {
+
+				if (fusing) {
+					var d = new Date();
+					thetaLength = 360 - 360 * (d.getTime() - oldtime) / 1500;
+					document.getElementById("cursor-main").setAttribute('geometry', 'thetaLength', thetaLength);
+					/*
+					if(thetaLength<0.1&&floor==fusingElement){
+						if(startedLooking==false){
+							move=!move;
+							if(!move)
+								window.dispatchEvent(new KeyboardEvent('keyup',{'code':'KeyW'}))	
+							startedLooking=true;
+						}
+					}*/
+				}
+				else {
+					thetaLength = 360;
+					document.getElementById("cursor-main").setAttribute('geometry', 'thetaLength', thetaLength);
+				}
+				if (move) {
+					window.dispatchEvent(new KeyboardEvent('keydown', { 'code': 'KeyW' }))
+				}
+
+			}
+		});
+		
+		//   /*
+		//   fetch("https://cors-anywhere.herokuapp.com/https://www.google.com/search?q="+keyword+"&tbm=isch"
+		// 	).then(response => response.text())
+		// .then(contents => 
+		// 	document.getElementById("image6").setAttribute('src',
+		// 	  new DOMParser().parseFromString(contents,'text/html').
+		// 	  querySelectorAll("img[alt^=Image]")[0].src)*/
+		// 	  console.log(new DOMParser().parseFromString(contents,'text/html').
+		// 	  querySelectorAll("img[alt^=Image]")))
+		// 	*/
+		//document.getElementsByClassName("islir")[0].childNodes[0].src
+
+		/*
+		fetch("http://" + ip + ":8080/https://api.qwant.com/api/search/images?q=" + keywords[5] + "&t=images&locale=en_US&uiv=4",
+			{
+				headers: {
+					"X-Requested-With": "XMLHttpRequest"
+				}
+			}
+		).then(data => data.json())
+			.then(resp => {
+				console.log(resp)
+				var i = 0;
+				while (resp.data.result.items[i].media.indexOf("download") != -1 && i < resp.data.result.items.length)
+					i++
+				if (resp.data.result.items[i].media.indexOf("download") == -1)
+					document.getElementById("image6").setAttribute('src', "http://" + ip + ":8080/" + resp.data.result.items[i].media);
+			})
+	*/})
+		.config(function ($interpolateProvider) {
+			$interpolateProvider.startSymbol('//').endSymbol('//');
+		});
+	imageTag.setAttribute('src', images[index])
+
+</script>
+
+</html>
